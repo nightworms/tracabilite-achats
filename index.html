@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Traçabilité Achats — Mairie de Saint-Denis</title>
+<title>Traçabilité Achats — Mairie de Saint-Denis | v3.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -197,6 +197,7 @@
     <input type="password" id="login-mdp" placeholder="••••••••">
     <div class="login-error" id="login-error">Email ou mot de passe incorrect.</div>
     <button class="btn-primary" onclick="login()">Se connecter</button>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--gris-texte);letter-spacing:1px">v3.2 — 10/04/2026</div>
   </div>
 </div>
 
@@ -750,8 +751,44 @@ async function signer(idFiche, role) {
 }
 
 // ── EXPORT PDF ─────────────────────────────────────────────
-function exportPDF() {
-  window.print();
+async function exportPDF() {
+  // Récupérer l'ID de la fiche affichée
+  var idEl = document.querySelector(".fiche-id");
+  if (!idEl) { toast("Aucune fiche ouverte", "erreur"); return; }
+  var idFiche = idEl.textContent.trim();
+  if (!idFiche || idFiche === "—") { toast("Impossible d'identifier la fiche", "erreur"); return; }
+
+  toast("⏳ Génération du PDF en cours...");
+
+  try {
+    // 1. Récupérer les données complètes de la fiche
+    const ficheData = await callAPI({ action: "get_fiche", id_fiche: idFiche });
+    if (!ficheData.succes) { toast("Erreur : fiche introuvable", "erreur"); return; }
+
+    // 2. Envoyer au script pour générer le PDF
+    const result = await callAPI({ action: "generate_pdf", fiche: ficheData.fiche });
+    if (!result.succes) { toast("Erreur PDF : " + result.message, "erreur"); return; }
+
+    // 3. Décoder le base64 et télécharger
+    const byteChars = atob(result.pdf);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteArray[i] = byteChars.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = result.filename || ("Fiche_" + idFiche + ".pdf");
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast("✓ PDF téléchargé avec succès", "succes");
+  } catch(e) {
+    toast("Erreur de connexion", "erreur");
+  }
 }
 
 // Touche Entrée sur login
