@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Traçabilité Achats — Mairie de Saint-Denis | v3.2</title>
+<title>Traçabilité Achats — Mairie de Saint-Denis | v3.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -142,6 +142,14 @@
   /* BOUTON PDF */
   .btn-pdf{background:var(--vert);color:white;border:none;padding:10px 20px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s;}
   .btn-pdf:hover{background:#145c38;}
+  .btn-modifier{background:var(--or);color:var(--bleu);border:none;padding:10px 20px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s;}
+  .btn-modifier:hover{background:var(--or-clair);}
+  /* MODAL MODIFICATION */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal-card{background:white;border-radius:16px;padding:32px;width:100%;max-width:700px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.3);}
+  .modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--bleu);margin-bottom:24px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px;}
 
   /* TOAST */
   .toast{position:fixed;bottom:32px;right:32px;background:var(--bleu);color:white;padding:16px 24px;border-radius:12px;font-size:14px;box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:9999;transform:translateY(100px);opacity:0;transition:all .3s ease;}
@@ -197,7 +205,7 @@
     <input type="password" id="login-mdp" placeholder="••••••••">
     <div class="login-error" id="login-error">Email ou mot de passe incorrect.</div>
     <button class="btn-primary" onclick="login()">Se connecter</button>
-    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--gris-texte);letter-spacing:1px">v3.2 — 10/04/2026</div>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--gris-texte);letter-spacing:1px">v3.3 — 10/04/2026</div>
   </div>
 </div>
 
@@ -414,6 +422,7 @@
         <div class="section-title">
           <span style="cursor:pointer;color:var(--bleu-clair);font-size:14px;font-weight:400" onclick="showTab('fiches')">← Retour</span>
         </div>
+        <button class="btn-modifier" onclick="ouvrirModification()">✏️ Modifier la fiche</button>
         <button class="btn-pdf" onclick="exportPDF()">⬇ Exporter en PDF</button>
       </div>
       <div id="detail-contenu"></div>
@@ -422,11 +431,85 @@
   </main>
 </div>
 
+<!-- MODAL MODIFICATION FICHE -->
+<div class="modal-overlay" id="modal-modif">
+  <div class="modal-card">
+    <div class="modal-title">✏️ Modifier la fiche <span id="modal-fiche-id"></span></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Direction</label>
+        <select id="m-direction">
+          <option value="">— Sélectionner —</option>
+          <option value="Direction Superstructure et bâti">Direction Superstructure et bâti</option>
+          <option value="Direction de l'Éducation">Direction de l'Éducation</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Responsable achat</label>
+        <select id="m-responsable"><option value="">— Sélectionner —</option></select>
+      </div>
+      <div class="form-group span2">
+        <label>Description du besoin</label>
+        <textarea id="m-besoin" style="min-height:80px"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Date de début</label>
+        <input type="date" id="m-date-debut">
+      </div>
+      <div class="form-group">
+        <label>Durée prévue</label>
+        <input type="text" id="m-duree">
+      </div>
+      <div class="form-group">
+        <label>Montant estimé HT (€)</label>
+        <input type="number" id="m-montant">
+      </div>
+      <div class="form-group">
+        <label>Code Nomenclature</label>
+        <input type="text" id="m-nomenclature">
+      </div>
+      <div class="form-group">
+        <label>Code UF / Opération</label>
+        <input type="text" id="m-uf">
+      </div>
+      <div class="form-group">
+        <label>Ligne budgétaire</label>
+        <input type="text" id="m-budget">
+      </div>
+      <div class="form-group span2">
+        <label>Niveau de concurrence</label>
+        <select id="m-concurrence">
+          <option value="">— Sélectionner —</option>
+          <option value="1 entreprise (0 à 4 999 € HT)">1 entreprise (0 à 4 999 € HT)</option>
+          <option value="2 entreprises (5 000 à 24 999 € HT)">2 entreprises (5 000 à 24 999 € HT)</option>
+          <option value="3 entreprises (25 000 à 49 999 € HT)">3 entreprises (25 000 à 49 999 € HT)</option>
+          <option value="5 entreprises (50 000 à 89 999 € HT)">5 entreprises (50 000 à 89 999 € HT)</option>
+          <option value="Pas de mise en concurrence">Pas de mise en concurrence</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <label class="form-group" style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--gris-texte);margin-bottom:8px;display:block">Entreprises consultées</label>
+      <div class="entreprises-grid">
+        <div class="entreprise-bloc"><div class="entreprise-num">Entreprise 1</div><input type="text" id="m-e1"></div>
+        <div class="entreprise-bloc"><div class="entreprise-num">Entreprise 2</div><input type="text" id="m-e2"></div>
+        <div class="entreprise-bloc"><div class="entreprise-num">Entreprise 3</div><input type="text" id="m-e3"></div>
+        <div class="entreprise-bloc"><div class="entreprise-num">Entreprise 4</div><input type="text" id="m-e4"></div>
+        <div class="entreprise-bloc" style="grid-column:span 2"><div class="entreprise-num">Entreprise 5</div><input type="text" id="m-e5"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fermerModification()">Annuler</button>
+      <button class="btn-submit" onclick="sauvegarderModification()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxOrBzJqOkbSWhjbxlqLT8_SKrbiglKd_sqSwbZSUYZbD_04FQnMrbj7SbxsxYOBVGsNA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxYf81pZ_vp9pmHuNpcHOhRp-Ttjzu4EgH4ZJolPnuH4G7Bs-1QUXlyK8n2DiQ9bYf7iA/exec";
 let agentConnecte = null;
 
 // ── UTILITAIRES ────────────────────────────────────────────
@@ -642,6 +725,7 @@ async function voirFiche(id) {
 }
 
 function renderDetail(f) {
+  ficheEnCoursModif = f;
   const peutSigner = role => agentConnecte && agentConnecte.role === role;
 
   const sigBloc = (role, label, nomCol, dateCol) => {
@@ -789,6 +873,84 @@ async function exportPDF() {
   } catch(e) {
     toast("Erreur de connexion", "erreur");
   }
+}
+
+// ── MODIFICATION FICHE ─────────────────────────────────────
+var ficheEnCoursModif = null;
+
+function ouvrirModification() {
+  if (!ficheEnCoursModif) { toast("Aucune fiche chargée","erreur"); return; }
+  var f = ficheEnCoursModif;
+
+  // Vérifier que la fiche n'est pas complète
+  if (f.Statut_Fiche === "COMPLETE") {
+    toast("Une fiche complète ne peut pas être modifiée","erreur"); return;
+  }
+
+  // Pré-remplir le modal
+  document.getElementById("modal-fiche-id").textContent = f.ID_Fiche;
+  document.getElementById("m-direction").value = f.Direction || "";
+  document.getElementById("m-besoin").value = f.Description_Besoin || "";
+  document.getElementById("m-date-debut").value = f.Date_Debut || "";
+  document.getElementById("m-duree").value = f.Duree_Prevue || "";
+  document.getElementById("m-montant").value = f.Montant_Estime_HT || "";
+  document.getElementById("m-nomenclature").value = f.Code_Nomenclature || "";
+  document.getElementById("m-uf").value = f.Code_UF_OP || "";
+  document.getElementById("m-budget").value = f.Ligne_Budgetaire || "";
+  document.getElementById("m-concurrence").value = f.Niveau_Concurrence || "";
+
+  // Responsable
+  var selResp = document.getElementById("m-responsable");
+  selResp.innerHTML = document.getElementById("f-responsable").innerHTML;
+  selResp.value = f.Responsable_Achat || "";
+
+  // Entreprises
+  var entreprises = (f.Entreprises_Consultees || "").split(" | ");
+  for (var i = 1; i <= 5; i++) {
+    var el = document.getElementById("m-e" + i);
+    if (el) el.value = entreprises[i-1] || "";
+  }
+
+  document.getElementById("modal-modif").classList.add("show");
+}
+
+function fermerModification() {
+  document.getElementById("modal-modif").classList.remove("show");
+}
+
+async function sauvegarderModification() {
+  if (!ficheEnCoursModif) return;
+
+  var payload = {
+    action: "modifier_fiche",
+    id_fiche: ficheEnCoursModif.ID_Fiche,
+    direction: document.getElementById("m-direction").value,
+    responsable_achat: document.getElementById("m-responsable").value,
+    description_besoin: document.getElementById("m-besoin").value,
+    date_debut: document.getElementById("m-date-debut").value,
+    duree_prevue: document.getElementById("m-duree").value,
+    montant_estime_ht: document.getElementById("m-montant").value,
+    code_nomenclature: document.getElementById("m-nomenclature").value,
+    code_uf_op: document.getElementById("m-uf").value,
+    ligne_budgetaire: document.getElementById("m-budget").value,
+    niveau_concurrence: document.getElementById("m-concurrence").value,
+    entreprise1: document.getElementById("m-e1").value,
+    entreprise2: document.getElementById("m-e2").value,
+    entreprise3: document.getElementById("m-e3").value,
+    entreprise4: document.getElementById("m-e4").value,
+    entreprise5: document.getElementById("m-e5").value,
+  };
+
+  try {
+    const data = await callAPI(payload);
+    if (data.succes) {
+      toast("✓ Fiche modifiée avec succès","succes");
+      fermerModification();
+      voirFiche(ficheEnCoursModif.ID_Fiche);
+    } else {
+      toast("Erreur : " + data.message,"erreur");
+    }
+  } catch(e) { toast("Erreur de connexion","erreur"); }
 }
 
 // Touche Entrée sur login
