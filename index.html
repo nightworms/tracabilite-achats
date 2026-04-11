@@ -165,17 +165,53 @@
 
   /* IMPRESSION / PDF */
   @media print {
-    header, nav, .form-actions, .btn-pdf, .btn-signer, .btn-voir, .btn-new, .btn-cancel, .btn-submit { display: none !important; }
-    body { background: white; font-family: Arial, sans-serif; font-size: 11pt; color: black; }
-    main { padding: 0; max-width: 100%; }
-    #tab-dashboard, #tab-fiches, #tab-nouvelle, #tab-detail { display: block !important; }
+    @page { size: A4 portrait; margin: 15mm 20mm 15mm 20mm; }
+
+    header, nav, .form-actions, .btn-pdf, .btn-modifier, .btn-signer, .btn-voir,
+    .btn-new, .btn-cancel, .btn-submit, .section-header, .modal-overlay,
+    .toast-container { display: none !important; }
+
+    body { background: white !important; font-family: Arial, sans-serif; font-size: 10pt; color: #111; margin: 0; }
+    main { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+
+    /* Masquer tous les onglets sauf le détail */
     #tab-dashboard, #tab-fiches, #tab-nouvelle { display: none !important; }
-    .fiche-detail { box-shadow: none; border: none; }
-    .fiche-header { background: #0D3B6E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .signatures-grid { grid-template-columns: repeat(3, 1fr); }
-    .signature-bloc { border: 1px solid #ccc; min-height: 120px; }
-    .fiche-body { padding: 16px; }
-    .section-header { display: none; }
+    #tab-detail { display: block !important; padding: 0 !important; }
+
+    /* En-tête d'impression */
+    #tab-detail::before {
+      content: "MAIRIE DE SAINT-DENIS — FICHE DE TRAÇABILITÉ DES ACHATS DÉCENTRALISÉS";
+      display: block;
+      text-align: center;
+      font-size: 8pt;
+      color: #555;
+      letter-spacing: 0.5px;
+      padding-bottom: 8pt;
+      border-bottom: 1px solid #ccc;
+      margin-bottom: 12pt;
+    }
+
+    .fiche-detail { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; margin: 0 !important; }
+    .fiche-header { background: #0D3B6E !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border-radius: 0 !important; padding: 12px 16px !important; }
+    .fiche-id { font-size: 16pt !important; }
+    .fiche-date { font-size: 9pt !important; }
+
+    .fiche-body { padding: 0 !important; }
+    .fiche-section { page-break-inside: avoid; border: 1px solid #ddd !important; border-radius: 4px !important; margin-bottom: 8pt !important; }
+    .fiche-section-title { background: #f4f6f9 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 9pt !important; padding: 6px 12px !important; }
+    .fiche-row { grid-template-columns: repeat(2, 1fr); gap: 0 !important; }
+    .fiche-field { padding: 6px 12px !important; border-right: 1px solid #eee; font-size: 9pt; }
+    .fiche-field label { font-size: 7.5pt !important; }
+
+    .signatures-grid { grid-template-columns: repeat(3, 1fr); page-break-inside: avoid; }
+    .signature-bloc { border: 1px solid #ccc !important; min-height: 100px !important; border-radius: 4px !important; }
+    .sig-role { font-size: 9pt !important; background: #f4f6f9 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .sig-name { font-size: 9pt !important; }
+    .sig-date { font-size: 8pt !important; }
+    .sig-image { max-height: 50px !important; }
+
+    /* Badge statut */
+    .badge { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   }
 
   @media (max-width:768px) {
@@ -835,44 +871,12 @@ async function signer(idFiche, role) {
 }
 
 // ── EXPORT PDF ─────────────────────────────────────────────
-async function exportPDF() {
-  // Récupérer l'ID de la fiche affichée
+function exportPDF() {
   var idEl = document.querySelector(".fiche-id");
   if (!idEl) { toast("Aucune fiche ouverte", "erreur"); return; }
-  var idFiche = idEl.textContent.trim();
-  if (!idFiche || idFiche === "—") { toast("Impossible d'identifier la fiche", "erreur"); return; }
-
-  toast("⏳ Génération du PDF en cours...");
-
-  try {
-    // 1. Récupérer les données complètes de la fiche
-    const ficheData = await callAPI({ action: "get_fiche", id_fiche: idFiche });
-    if (!ficheData.succes) { toast("Erreur : fiche introuvable", "erreur"); return; }
-
-    // 2. Envoyer au script pour générer le PDF
-    const result = await callAPI({ action: "generate_pdf", fiche: ficheData.fiche });
-    if (!result.succes) { toast("Erreur PDF : " + result.message, "erreur"); return; }
-
-    // 3. Décoder le base64 et télécharger
-    const byteChars = atob(result.pdf);
-    const byteArray = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) {
-      byteArray[i] = byteChars.charCodeAt(i);
-    }
-    const blob = new Blob([byteArray], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = result.filename || ("Fiche_" + idFiche + ".pdf");
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    toast("✓ PDF téléchargé avec succès", "succes");
-  } catch(e) {
-    toast("Erreur de connexion", "erreur");
-  }
+  // Ouvre la boîte de dialogue d'impression du navigateur.
+  // Sélectionner "Enregistrer en PDF" comme destination génère un PDF A4.
+  window.print();
 }
 
 // ── MODIFICATION FICHE ─────────────────────────────────────
