@@ -874,9 +874,23 @@ async function signer(idFiche, role) {
 function exportPDF() {
   var idEl = document.querySelector(".fiche-id");
   if (!idEl) { toast("Aucune fiche ouverte", "erreur"); return; }
-  // Ouvre la boîte de dialogue d'impression du navigateur.
-  // Sélectionner "Enregistrer en PDF" comme destination génère un PDF A4.
-  window.print();
+  var idFiche = idEl.textContent.trim();
+  if (!idFiche || idFiche === "—") { toast("Impossible d'identifier la fiche", "erreur"); return; }
+
+  toast("⏳ Génération du PDF en cours...");
+
+  var element = document.getElementById("detail-contenu");
+  var opt = {
+    margin:      [12, 15, 12, 15],
+    filename:    "Fiche_" + idFiche + ".pdf",
+    image:       { type: "jpeg", quality: 0.97 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF:       { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+
+  html2pdf().set(opt).from(element).save()
+    .then(() => toast("✓ PDF téléchargé avec succès", "succes"))
+    .catch(() => toast("Erreur lors de la génération du PDF", "erreur"));
 }
 
 // ── MODIFICATION FICHE ─────────────────────────────────────
@@ -962,5 +976,6 @@ document.getElementById("login-mdp").addEventListener("keydown", e => {
   if(e.key==="Enter") login();
 });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+3To5f+KWsgSkGktedDqgqDZU64NXAP11iFY8sg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 </html>
