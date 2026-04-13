@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Traçabilité Achats — Mairie de Saint-Denis | v3.4</title>
+<title>Traçabilité Achats — Mairie de Saint-Denis | v3.5</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -11,7 +11,7 @@
     --blanc:#F7F8FA; --gris:#E8ECF1; --gris-texte:#6B7A8D;
     --rouge:#C0392B; --vert:#1A7A4A; --ombre:0 4px 24px rgba(13,59,110,0.10);
   }
-  *{box-sizing:border-box;margin:0;padding:0;}
+  *{box-sizing:border-box;margin:0;padding:0
   body{font-family:'DM Sans',sans-serif;background:var(--blanc);color:#1A2332;min-height:100vh;}
 
   /* LOGIN */
@@ -163,6 +163,10 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   .vide{text-align:center;padding:48px;color:var(--gris-texte);font-size:14px;}
 
+  /* BOUTON FICHE WORD */
+  .btn-fiche{background:#1F6B35;color:white;border:none;padding:10px 20px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .2s;}
+  .btn-fiche:hover{background:#165427;}
+  .btn-fiche:disabled{opacity:.6;cursor:not-allowed;}
   /* IMPRESSION / PDF */
   @media print {
     @page { size: A4 portrait; margin: 15mm 20mm 15mm 20mm; }
@@ -241,7 +245,7 @@
     <input type="password" id="login-mdp" placeholder="••••••••">
     <div class="login-error" id="login-error">Email ou mot de passe incorrect.</div>
     <button class="btn-primary" onclick="login()">Se connecter</button>
-    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--gris-texte);letter-spacing:1px">v3.4 — 10/04/2026</div>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--gris-texte);letter-spacing:1px">v3.5 — 13/04/2026</div>
   </div>
 </div>
 
@@ -460,6 +464,7 @@
         </div>
         <button class="btn-modifier" onclick="ouvrirModification()">✏️ Modifier la fiche</button>
         <button class="btn-pdf" onclick="exportPDF()">⬇ Exporter en PDF</button>
+          <button class="btn-fiche" id="btn-fiche-word" onclick="telechargerFicheWord()">📄 Télécharger la fiche</button>
       </div>
       <div id="detail-contenu"></div>
     </div>
