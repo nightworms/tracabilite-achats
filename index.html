@@ -980,10 +980,7 @@ async function sauvegarderModification() {
 document.getElementById("login-mdp").addEventListener("keydown", e => {
   if(e.key==="Enter") login();
 });
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+3To5f+KWsgSkGktedDqgqDZU64NXAP11iFY8sg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-</body>
-</html>
+
 
   // ── TÉLÉCHARGEMENT FICHE (Apps Script generer_fiche) ──────
   async function telechargerFicheWord() {
@@ -1022,3 +1019,6 @@ document.getElementById("login-mdp").addEventListener("keydown", e => {
     } catch(e) { toast("Erreur de connexion au serveur","erreur"); }
     finally { btn.disabled=false; btn.textContent="📄 Télécharger la fiche"; }
   }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+3To5f+KWsgSkGktedDqgqDZU64NXAP11iFY8sg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
