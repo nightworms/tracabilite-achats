@@ -984,3 +984,41 @@ document.getElementById("login-mdp").addEventListener("keydown", e => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+3To5f+KWsgSkGktedDqgqDZU64NXAP11iFY8sg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 </html>
+
+  // ── TÉLÉCHARGEMENT FICHE (Apps Script generer_fiche) ──────
+  async function telechargerFicheWord() {
+    if (!ficheEnCoursModif) { toast("Aucune fiche chargée", "erreur"); return; }
+    var f = ficheEnCoursModif, btn = document.getElementById("btn-fiche-word");
+    btn.disabled = true; btn.textContent = "⏳ Génération...";
+    toast("⏳ Génération en cours...");
+    var ents = (f.Entreprises_Consultees||"").split(" | ");
+    var data = {
+      direction: f.Direction||"", nom_acheteur: f.Responsable_Achat||"",
+      description_besoin: f.Description_Besoin||"", date_debut: f.Date_Debut||"",
+      duree_prevue: f.Duree_Prevue||"",
+      montant_estime_ht: f.Montant_Estime_HT ? Number(f.Montant_Estime_HT).toLocaleString("fr-FR")+" €" : "",
+      justification: "", sig_elu: f.Signataire_Elu||"", date_sig_elu: f.Date_Signature_Elu||"",
+      nom_directeur: f.Signataire_Directeur||"", date_sig_directeur: f.Date_Signature_Directeur||"",
+      date_sig_acheteur: f.Date_Signature_Acheteur||"",
+      entreprise_1: ents[0]||"", entreprise_2: ents[1]||"",
+      sig_pouvoir_adj: "", date_sig_pouvoir_adj: "", date_consultation: "",
+      date_remise_offres: "", nb_offres: "",
+      offre_e1: ents[0]||"", offre_e2: ents[1]||"", offre_e3: ents[2]||"",
+      offre_e4: ents[3]||"", offre_e5: ents[4]||"",
+      attributaire_nom: "", attributaire_ht: "", attributaire_tva: "", attributaire_ttc: "",
+      date_sig_acheteur_p2: "", sig_directeur_p2: "", date_sig_directeur_p2: "",
+      sig_pouvoir_adj_p2: "", date_sig_pouvoir_adj_p2: ""
+    };
+    try {
+      var r = await callAPI({ action: "generer_fiche", data: data });
+      if (r.succes) {
+        var arr = new Uint8Array(atob(r.base64).split("").map(function(c){return c.charCodeAt(0);}));
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([arr],{type:"application/pdf"}));
+        a.download = r.filename || ("fiche_"+f.ID_Fiche+".pdf");
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        toast("✓ Fiche téléchargée avec succès","succes");
+      } else { toast("Erreur : "+(r.message||r.error||"Inconnue"),"erreur"); }
+    } catch(e) { toast("Erreur de connexion au serveur","erreur"); }
+    finally { btn.disabled=false; btn.textContent="📄 Télécharger la fiche"; }
+  }
